@@ -69,17 +69,28 @@ var MessagerContainer = React.createClass({displayName: "MessagerContainer",
   getInitialState: function() {
     var containerThis = this;
     messageCollection.fetch().done(function(){
-      containerThis.setState({messageCollection:messageCollection})
-    });
-    return{
+      containerThis.setState({
+        messageCollection:messageCollection
+        , scroll: true
+
+      })
+    })
+    return {
       messageList:messageCollection
-      , username: this.props.router.user
+      , username: this.props.router.username
+      , scroll: true
     }
   }
-  , componentWillMount: function () {
+  , componentWillMount: function() {
+    // this.setState({scroll: true})
     window.setInterval(this.update, 30000);
   }
+  , componentDidMount: function(){
+    this.setState({scroll: true})
+    this.update()
+  }
   , update: function() {
+    // this.setState({scroll: false})
     var containerThis = this;
     messageCollection.fetch().done(function(){
       containerThis.setState({messageCollection:messageCollection})
@@ -87,8 +98,8 @@ var MessagerContainer = React.createClass({displayName: "MessagerContainer",
     });
   }
   , addMessage: function(message){
+    message.username = this.props.router.username
     var messageList = this.state.messageList;
-    console.log(messageList)
     messageList.create(message);
     this.setState({messageList: messageList});
   }
@@ -96,8 +107,10 @@ var MessagerContainer = React.createClass({displayName: "MessagerContainer",
     return(
 
     React.createElement("div", null, 
+      React.createElement("span", {className: "options float-right"}, " Log Out"), 
+      React.createElement("div", {className: "title"}, " Chatterer "), 
       React.createElement("div", {className: "display well"}, 
-      React.createElement(Display, {messageList: this.state.messageList})
+      React.createElement(Display, {scroll: this.state.scroll, messageList: this.state.messageList})
       ), 
       React.createElement(Input, {addMessage: this.addMessage})
     )
@@ -112,11 +125,10 @@ var Display = React.createClass({displayName: "Display",
     var node = ReactDOM.findDOMNode(this.messagesEnd);
     node.scrollIntoView({behavior: "smooth"});
   }
-  // , componentDidMount() {
-  //   this.scrollToBottom();
-  // }
-  , componentDidUpdate() {
-    this.scrollToBottom();
+  , componentWillReceiveProps(nextProps) {
+    if (nextProps.scroll){
+      this.scrollToBottom()
+    };
   }
   , render: function(){
     var messages = this.props.messageList.map(function(model){
